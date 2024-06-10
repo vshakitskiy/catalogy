@@ -1,0 +1,10 @@
+[
+  {
+    "keyword": "test1",
+    "content": [ "url1", "url2" ]
+  },
+  {
+    "keyword": "test2",
+    "content": [ "url1", "url2" ]
+  }
+]

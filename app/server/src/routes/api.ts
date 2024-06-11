@@ -1,27 +1,102 @@
 import { Hono } from "hono"
 import data from "../../data.json"
-import { z } from "zod"
-
-const contentsSchema = z.object({
-  name: z.string(),
-  content: z.string().array(),
-})
+import axios from "axios"
+import * as cheerio from "cheerio"
 
 const apiRouter = new Hono()
 
-apiRouter.get("/contents", (c) => {
+const findByKeyword = (keyword: string) => {
+  return data.find((item) => item.keyword === keyword)
+}
+
+apiRouter.get("/links", (c) => {
   return c.json(data)
 })
 
-apiRouter.get("/contents/:keyword", (c) => {
+apiRouter.get("/links/:keyword", (c) => {
   const keyword = c.req.param("keyword")
-  const result = data.find((item) => item.keyword === keyword)
+  const list = findByKeyword(keyword)
 
-  if (!result) {
+  if (!list) {
     return c.json("Not found", 404)
   }
 
-  return c.json(result)
+  return c.json(list)
+})
+
+apiRouter.get("/contents/:data{.*=.*}", async (c) => {
+  try {
+    const data = c.req.param("data")
+    const [keyword, ...rest] = data.split("=")
+    const url = rest.join().replaceAll(">", "/")
+
+    const list = findByKeyword(keyword)
+    if (!list) {
+      return c.json(
+        {
+          message: "Not found",
+        },
+        404
+      )
+    }
+
+    const mainLink = list.content.find((item) => url === item.split("://")[1])
+    if (!mainLink) {
+      return c.json(
+        {
+          message: "Not found",
+        },
+        404
+      )
+    }
+
+    const res = await axios.get(mainLink, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+      },
+    })
+    const content = res.data
+    const $ = cheerio.load(content)
+
+    const links = $("link[rel=stylesheet]").toArray()
+    for (const link of links) {
+      let newCssTag = ""
+      if ($(link).attr("href")?.startsWith("//")) {
+        const res = await axios.get($(link).attr("href") as string)
+        newCssTag = `<style>${res.data}</style>`
+      } else if ($(link).attr("href")?.startsWith("/")) {
+        const res = await axios.get(mainLink + $(link).attr("href"))
+        newCssTag = `<style>${res.data}</style>`
+      }
+      $(link).replaceWith(newCssTag)
+    }
+
+    // const scripts = $("script[src]").toArray()
+    // for (const script of scripts) {
+    //   let newScriptTag = ""
+    //   if ($(script).attr("src")?.startsWith("//")) {
+    //     const res = await axios.get($(script).attr("src") as string)
+    //     newScriptTag = `<script>${res.data}</script>`
+    //   } else if ($(script).attr("src")?.startsWith("/")) {
+    //     const res = await axios.get(mainLink + $(script).attr("src"))
+    //     newScriptTag = `<script>${res.data}</script>`
+    //   }
+    //   $(script).replaceWith(newScriptTag)
+    // }
+    const htmlCode = $.html()
+
+    return c.json({
+      link: mainLink,
+      code: htmlCode.replaceAll(/[\n\t]+/g, "").replaceAll('"', "'"),
+    })
+  } catch (error) {
+    return c.json(
+      {
+        message: "Can't access link",
+      },
+      500
+    )
+  }
 })
 
 export default apiRouter

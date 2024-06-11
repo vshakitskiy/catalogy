@@ -6,6 +6,8 @@
   "dependencies": {
     "@hono/node-server": "^1.11.2",
     "@hono/zod-validator": "^0.2.2",
+    "axios": "^1.7.2",
+    "cheerio": "1.0.0-rc.12",
     "hono": "^4.4.4",
     "zod": "^3.23.8"
   },

@@ -1,10 +1,18 @@
 [
   {
-    "keyword": "test1",
-    "content": [ "url1", "url2" ]
+    "keyword": "study",
+    "content": [ "https://kf.bmstu.ru/", "https://ithub.ru/" ]
   },
   {
-    "keyword": "test2",
-    "content": [ "url1", "url2" ]
+    "keyword": "icons",
+    "content": [ "https://icons8.com/icons" ]
+  },
+  {
+    "keyword": "old",
+    "content": [ "http://itcorp.com/", "https://www.vortex.com/", "http://www.toad.com/" ]
+  },
+  {
+    "keyword": "library",
+    "content": [ "https://www.theoldlibrary.ae/", "https://openlibrary.org/" ]
   }
 ]

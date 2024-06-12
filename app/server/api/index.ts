@@ -1,19 +1,40 @@
 import { Hono } from "hono"
-import data from "../../data.json"
+import { handle } from "hono/vercel"
+import { serve } from "@hono/node-server"
+import { cors } from "hono/cors"
+import data from "./data.json"
 import axios from "axios"
 import * as cheerio from "cheerio"
 
-const apiRouter = new Hono()
-
+export const config = {
+  runtime: "edge",
+}
+// Helper func
 const findByKeyword = (keyword: string) => {
   return data.find((item) => item.keyword === keyword)
 }
 
-apiRouter.get("/links", (c) => {
+const app = new Hono()
+
+// CORS
+app.use(cors())
+
+// Custom logs
+app.use(async (c, next) => {
+  const start = Date.now()
+  await next()
+  const end = Date.now()
+  console.log(`${c.req.method} ${c.req.url} ${end - start}ms - ${c.res.status}`)
+  c.res.headers.set("X-Response-Time", `${end - start}`)
+})
+
+// All keywords with urls
+app.get("/api/links", (c) => {
   return c.json(data)
 })
 
-apiRouter.get("/links/:keyword", (c) => {
+// Urls by keyword
+app.get("/api/links/:keyword", (c) => {
   const keyword = c.req.param("keyword")
   const list = findByKeyword(keyword)
 
@@ -24,7 +45,8 @@ apiRouter.get("/links/:keyword", (c) => {
   return c.json(list)
 })
 
-apiRouter.get("/contents/:data{.*=.*}", async (c) => {
+// Fetch page content
+app.get("/api/contents/:data{.*=.*}", async (c) => {
   try {
     const data = c.req.param("data")
     const [keyword, ...rest] = data.split("=")
@@ -99,4 +121,30 @@ apiRouter.get("/contents/:data{.*=.*}", async (c) => {
   }
 })
 
-export default apiRouter
+// Unknown endpoints
+app.use(async (c) => {
+  return c.json(
+    {
+      message: "Not found",
+    },
+    404
+  )
+})
+
+/* 
+  Serving method  
+    serve - Local
+    handle - Vercel 
+*/
+
+// Production
+export default handle(app)
+
+// Development
+/* const port = 3000
+console.log(`Server is running on port ${port}`)
+
+serve({
+  fetch: app.fetch,
+  port,
+}) */

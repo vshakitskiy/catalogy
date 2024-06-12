@@ -1,1 +1,4 @@
-# Server guideline
+```
+npm install
+npm run start
+```

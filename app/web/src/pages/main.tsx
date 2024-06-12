@@ -9,6 +9,7 @@ import { IoIosSearch } from "react-icons/io"
 const MainPage = () => {
   const input = useRef<HTMLInputElement>(null)
   const [keyword, setKeyword] = useState("")
+  const serverUrl = import.meta.env.VITE_SERVER_URL
 
   const linksQuery = useQuery<{
     keyword: string
@@ -17,7 +18,7 @@ const MainPage = () => {
     queryKey: ["links", keyword],
     queryFn: () => {
       return axios
-        .get("http://localhost:3000/api/links/" + keyword)
+        .get(`${serverUrl}/api/links/` + keyword)
         .then((res) => res.data)
     },
     enabled: !!keyword,

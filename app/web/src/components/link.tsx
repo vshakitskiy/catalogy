@@ -9,6 +9,7 @@ import { FaCheck } from "react-icons/fa"
 const Link = ({ url, keyword }: { url: string; keyword: string }) => {
   const [apiUrl, setApiUrl] = useState("")
   const { setKeys } = useContext(storageContext)
+  const serverUrl = import.meta.env.VITE_SERVER_URL
   const { data, isLoading } = useQuery<{
     link: string
     code: string
@@ -16,7 +17,7 @@ const Link = ({ url, keyword }: { url: string; keyword: string }) => {
     queryKey: ["content", apiUrl],
     queryFn: () => {
       return axios
-        .get("http://localhost:3000/api/contents/" + keyword + "=" + apiUrl)
+        .get(`${serverUrl}/api/contents/` + keyword + "=" + apiUrl)
         .then((res) => res.data)
     },
     enabled: !!apiUrl,

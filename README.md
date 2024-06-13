@@ -2,6 +2,10 @@
 
 HTTP client and server for fetching websites.
 
+Client: https://catalogy-client.vercel.app/
+
+Server: https://catalogy-server.vercel.app/
+
 ## Getting started
 
 1. Clone repo with git: `git clone https://github.com/vshakitskiy/catalogy.git`
